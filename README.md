@@ -51,8 +51,8 @@ auto res1 = vec1 + vec2;
 auto res2 = vec1 - vec2;
 auto res3 = vec1 * vec2;
 auto res4 = vec1 / vec2;
-auto res5 = vec1 * matrix;
-auto res6 = vec1 / matrix;
+auto res5 = matrix * vec1;
+auto res6 = matrix / vec1;
 auto res7 = vec1 * 2;
 auto res8 = vec1 / 2;
 
