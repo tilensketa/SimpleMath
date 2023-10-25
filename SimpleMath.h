@@ -257,4 +257,33 @@ namespace sm {
 			return result;
 		}
 	};
+
+	namespace algo {
+
+		template<typename T, size_t Size>
+		Vector<T, Size> Thomas(const Vector<T, Size-1>& a, const Vector<T, Size>& b, const Vector<T, Size-1>& c, const Vector<T, Size>& z) {
+			//const int m = b.m_Size;
+			const int m = 6;
+			sm::Vector<double, m> U;
+			sm::Vector<double, m - 1> L;
+			U[0] = b[0];
+
+			for (int i = 0; i < m - 1; i++) {
+				L[i] = a[i] / U[i];
+				U[i + 1] = b[i + 1] - L[i] * c[i];
+			}
+
+			sm::Vector<double, m> y = z;
+			for (int i = 1; i < m; i++) {
+				y[i] = z[i] - L[i - 1] * y[i - 1];
+			}
+
+			auto x = y;
+			x[m - 1] = x[m - 1] / U[m - 1];
+			for (int i = m-2; i > -1; i--) {
+				x[i] = (y[i] - c[i] * x[i + 1]) / U[i];
+			}
+			return x;
+		}
+	}
 }
