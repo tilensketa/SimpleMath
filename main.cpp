@@ -16,17 +16,14 @@ double diff = k / (ro * cp);
 double Fo = diff * dt / (dx* dx);
 double Bi = h * dx / k;
 
-//const int p = t / dt;
-const int p = 20000;
-
 int main() {
 
-	sm::Vector<double, N - 1> a;
-	sm::Vector<double, N> b;
-	sm::Vector<double, N - 1> c;
-	sm::Vector<double, N> z;
+	sm::Vector<double> a(N-1);
+	sm::Vector<double> b(N);
+	sm::Vector<double> c(N-1);
+	sm::Vector<double> z(N);
 
-	sm::Vector<double, N> T(Tzac);
+	sm::Vector<double> T(N, Tzac);
 
 	// define a
 	for (int i = 0; i < a.m_Size; i++) {
@@ -46,9 +43,9 @@ int main() {
 	}
 	b[b.m_Size - 1] = 1 + 2 * Fo + 2 * Fo * Bi;
 
-	//const int p = 20000;
-	sm::Vector<double, p> temp_zg;
-	sm::Vector<double, p> temp_sp;
+	int p = t / dt;
+	sm::Vector<double> temp_zg(p);
+	sm::Vector<double> temp_sp(p);
 	for (int i = 0; i < p; i++) {
 		for (int j = 0; j < N; j++) {
 			z[j] = T[j];
