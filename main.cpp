@@ -4,13 +4,13 @@ double ro = 1200.0; // kg / m3
 double cp = 1500.0; // J / kgK
 double k = 0.3; // W / mK
 double L = 0.06; // m
-double Tzac = 80.0 + 273.0; // K
-double Tzrak = 20.0 + 273.0; // K
-double h = 100; // W / m2K
+float Tzac = 80.0 + 273.0; // K
+float Tzrak = 20.0 + 273.0; // K
+int h = 100; // W / m2K
 
-double dt = 1; // s
+int dt = 1; // s
 const int N = 6; // število vozlišè
-double t = 20000; // konèni èas v s
+int t = 20000; // konèni èas v s
 double dx = L / 10;
 double diff = k / (ro * cp);
 double Fo = diff * dt / (dx* dx);
@@ -60,12 +60,12 @@ int main() {
 	//std::cout << temp_zg << std::endl;
 	
 #define RESET "\033[0m"
-	double delta = 1;
+	int delta = 1;
 	float deltaX = (Tzac - Tzrak) / 40;
-	float deltaY = p / 170;
+	float deltaY = (float)p / 170;
 	std::cout << "Tzac----------------------------------" << std::endl;
 	for (int x = Tzac-273; x > Tzrak-273; x-=deltaX) {
-		int i = (Tzac - 273 - x) *deltaX;
+		int i = (Tzac - 273 - x) * deltaX;
 		std::cout << temp_zg[i] << "\t";
 		for (int y = 0; y < p; y+=deltaY) {
 			if (temp_zg[y] > x - delta && temp_zg[y] < x + delta)
@@ -78,4 +78,12 @@ int main() {
 		std::cout << std::endl;
 	}
 	std::cout << "Tzrak----------------------------------" << std::endl;
+
+	sm::Matrix<int> mat1(2, 3, {1,2,3,4,5,6});
+	sm::Matrix<int> mat3 = mat1.Transpose();
+	std::cout << mat1 << std::endl;
+	std::cout << mat3 << std::endl;
+	sm::Matrix<float> mat4(3, 3, sm::Identity);
+	std::cout << mat4 << std::endl;
+	std::cout << mat4.Determinant() << std::endl;
 }
