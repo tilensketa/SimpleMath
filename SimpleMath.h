@@ -4,7 +4,50 @@
 #include <initializer_list>
 #include <cassert>
 
+#define PI 3.1415926536
+
 namespace sm {
+	// Function declarations
+	namespace algo {
+		template <typename T>
+		T TaylorSeries(int precision, bool prime, T value);
+	}
+
+	namespace tg {
+
+		// Angle conversion
+		template <typename T>
+		T degToRad(T angleDeg) {
+			T result = angleDeg * (PI / 180);
+			return result;
+		}
+		template <typename T>
+		T radToDeg(T angleRad) {
+			T result = angleRad * (180 / PI);
+			return result;
+		}
+
+		// Trigonometric functions
+		#define TRIGONOMETRIC_PRECISION 11
+		template <typename T>
+		T sin(T angleRad) {
+			return algo::TaylorSeries(TRIGONOMETRIC_PRECISION, false, angleRad);
+		}
+		template <typename T>
+		T cos(T angleRad) {
+			return algo::TaylorSeries(TRIGONOMETRIC_PRECISION, true, angleRad);
+		}
+		template <typename T>
+		T tan(T angleRad) {
+			T result = sin(angleRad) / cos(angleRad);
+			return result;
+		}
+		template <typename T>
+		T cot(T angleRad) {
+			T result = cos(angleRad) / sin(angleRad);
+			return result;
+		}
+	}
 
 	template <typename T>
 	struct Vector {
@@ -105,11 +148,25 @@ namespace sm {
 			}
 			return result;
 		}
+
+		Vector<T> Homogeneous() {
+			Vector<T> result(m_Size + 1);
+			for (int i = 0; i < m_Size; i++) {
+				result.m_Data[i] = m_Data[i];
+			}
+			result.m_Data[m_Size] = (T)1;
+			return result;
+		}
 	};
 
 	enum Type
 	{
 		Identity = 0,
+		RotationX,
+		RotationY,
+		RotationZ,
+		Translation2D,
+		Transformation2D,
 	};
 
 	template <typename T>
@@ -149,7 +206,8 @@ namespace sm {
 				}
 			}
 		}
-		Matrix(int rows, int cols, const Type& type) : m_Rows(rows), m_Cols(cols) {
+		// Identity matrix
+		Matrix(int size, const Type& type) : m_Rows(size), m_Cols(size) {
 			m_Data = new T[m_Rows * m_Cols];
 			switch (type)
 			{
@@ -164,6 +222,62 @@ namespace sm {
 								m_Data[i] = (T)0;
 						}
 					}
+			}
+		}
+		// Rotation matrix X, Y, Z
+		Matrix(const Type& type, float angleDeg): Matrix(3,3) {
+			T angleRad = tg::degToRad(angleDeg);
+			switch (type)
+			{
+			case RotationX:
+				m_Data[0] = (T)1;
+				m_Data[4] = tg::cos(angleRad);
+				m_Data[5] = -tg::sin(angleRad);
+				m_Data[7] = tg::sin(angleRad);
+				m_Data[8] = tg::cos(angleRad);
+				break;
+
+			case RotationY:
+				m_Data[0] = tg::cos(angleRad);
+				m_Data[2] = tg::sin(angleRad);
+				m_Data[4] = (T)1;
+				m_Data[6] = -tg::sin(angleRad);
+				m_Data[7] = tg::cos(angleRad);
+				break;
+
+			case RotationZ:
+				m_Data[0] = tg::cos(angleRad);
+				m_Data[1] = -tg::sin(angleRad);
+				m_Data[3] = tg::sin(angleRad);
+				m_Data[4] = tg::cos(angleRad);
+				m_Data[8] = (T)1;
+				break;
+			}
+		}
+		// Translation matrix
+		Matrix(const Type& type, float dx, float dy) : Matrix(3,sm::Identity) {
+			switch (type)
+			{
+			case Translation2D:
+				m_Data[2] = dx;
+				m_Data[5] = dy;
+				break;
+			default:
+				assert(0);
+				break;
+			}
+		}
+		// Transformation matrix (rotation, translation)
+		Matrix(const Type& type, float angleDeg, float dx, float dy) : Matrix(sm::RotationZ, angleDeg) {
+			switch (type)
+			{
+			case Transformation2D:
+				m_Data[2] = dx;
+				m_Data[5] = dy;
+				break;
+			default:
+				assert(0);
+				break;
 			}
 		}
 		Matrix(const Matrix& other) : m_Rows(other.m_Rows), m_Cols(other.m_Cols) {
@@ -210,14 +324,13 @@ namespace sm {
 				return row[y];
 			}
 		};
-
 		RowProxy operator[](int x) {
 			assert(x >= 0 && x < m_Rows);
-			return RowProxy(m_Cols, &m_Data[x]);
+			return RowProxy(m_Cols, &m_Data[x * m_Cols]);
 		}
 		const RowProxy operator[](int x) const {
 			assert(x >= 0 && x < m_Rows);
-			return RowProxy(m_Cols, &m_Data[x]);
+			return RowProxy(m_Cols, &m_Data[x * m_Cols]);
 		}
 		RowProxy& operator=(const RowProxy& other) {
 			for (int col = 0; col < m_Rows; col++) {
@@ -323,6 +436,26 @@ namespace sm {
 			return result;
 		}
 
+		Matrix<T> Homogeneous() {
+			assert(m_Rows == m_Cols);
+
+			Matrix<T> result(m_Rows + 1, m_Cols + 1);
+			int i = 0;
+			for (int x = 0; x < result.m_Rows; x++) {
+				for (int y = 0; y < result.m_Cols; y++) {
+					int j = x * result.m_Cols + y;
+					if (y == m_Cols || x == m_Rows) {
+						result.m_Data[j] = (T)0;
+					}
+					else {
+						result.m_Data[j] = m_Data[i];
+						i++;
+					}
+				}
+			}
+			result.m_Data[result.m_Rows * result.m_Cols - 1] = (T)1;
+			return result;
+		}
 		Matrix<T> SubMatrix(int row, int col) {
 			assert(m_Rows == m_Cols);
 
@@ -369,6 +502,28 @@ namespace sm {
 			}
 			return determinant;
 		}
+		Matrix<T> Inverse() {
+			assert(m_Rows == m_Cols);
+			int determiant = this->Determinant();
+			assert(determiant != 0);
+
+			Matrix<T> transposedMatrix = this->Transpose();
+			Matrix<T> cofactorMatrix(transposedMatrix.m_Rows, transposedMatrix.m_Cols);
+
+			for (int x = 0; x < cofactorMatrix.m_Rows; x++) {
+				for (int y = 0; y < cofactorMatrix.m_Cols; y++) {
+					Matrix<T> subMatrix = transposedMatrix.SubMatrix(x, y);
+					int subMatrixDeterminant = subMatrix.Determinant();
+					int i = x * cofactorMatrix.m_Cols + y;
+					if (i % 2 == 0)
+						cofactorMatrix.m_Data[i] = subMatrixDeterminant;
+					else
+						cofactorMatrix.m_Data[i] = -subMatrixDeterminant;
+				}
+			}
+			Matrix<T> inversedMatrix = cofactorMatrix * (1 / determiant);
+			return inversedMatrix;
+		}
 	};
 
 	namespace algo {
@@ -396,6 +551,64 @@ namespace sm {
 				x[i] = (y[i] - c[i] * x[i + 1]) / U[i];
 			}
 			return x;
+		}
+
+		int Factorial(int value) {
+			int result = 1;
+			if (value == 0)
+				return 1;
+			else if (value < 0)
+				return -Factorial(-value);
+
+			for (int i = 1; i <= value; i++) {
+				result *= i;
+			}
+			return result;
+		}
+		
+		template <typename T>
+		T Absolute(T value) {
+			if (value < 0)
+				return -value;
+			else
+				return value;
+		}
+
+		template <typename T>
+		T Power(T value, int exponent) {
+			T result = 1;
+			for (int i = 1; i <= Absolute(exponent); i++)
+			{
+				result *= value;
+			}
+			if (exponent < 0)
+				return 1 / result;
+			else
+				return result;
+		}
+
+		template <typename T>
+		T TaylorSeries(int precision, bool prime, T value) {
+			T result = (T)0;
+			int j = 0;
+			for (int i = 0; i <= precision; i ++) {
+				if (!prime && i % 2 == 0)
+					continue;
+				if (prime && i % 2 == 1)
+					continue;
+
+				T upperPart = Power(value, i);
+				T lowerPart = Factorial(i);
+				
+				T midResult = upperPart / lowerPart;
+
+				if (j % 2 == 0)
+					result += midResult;
+				else
+					result -= midResult;
+				j++;
+			}
+			return result;
 		}
 	}
 }

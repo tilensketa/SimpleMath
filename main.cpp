@@ -79,11 +79,64 @@ int main() {
 	}
 	std::cout << "Tzrak----------------------------------" << std::endl;
 
-	sm::Matrix<int> mat1(2, 3, {1,2,3,4,5,6});
-	sm::Matrix<int> mat3 = mat1.Transpose();
+	sm::Matrix<int> mat1(3, 3, { 1,2,3,0,1,4,5,6,0 });
+	auto inv = mat1.Inverse();
+
 	std::cout << mat1 << std::endl;
-	std::cout << mat3 << std::endl;
-	sm::Matrix<float> mat4(3, 3, sm::Identity);
-	std::cout << mat4 << std::endl;
-	std::cout << mat4.Determinant() << std::endl;
+	std::cout << inv << std::endl;
+
+	float d = sm::tg::sin(0.523599);
+	std::cout << d << std::endl;
+
+	float rad = PI / 6;
+	float deg = sm::tg::radToDeg(rad);
+	std::cout << deg << std::endl;
+
+	double value = 2;
+	std::cout << sm::algo::Power(value,2) << std::endl;
+	std::cout << sm::algo::Power(value,-2) << std::endl;
+
+	std::cout << sm::tg::sin(rad) << std::endl;
+	std::cout << sm::tg::cos(rad) << std::endl;
+	std::cout << sm::tg::tan(rad) << std::endl;
+	std::cout << sm::tg::cot(rad) << std::endl;
+
+	sm::Vector<int> vec({ 1,2,3 });
+	auto hom = vec.Homogeneous();
+	std::cout << vec << std::endl;
+	std::cout << hom << std::endl;
+	
+	sm::Matrix<int> matrix(3,3, { 1,2,3,4,5,6,7,8,9 });
+	auto homMatrix = matrix.Homogeneous();
+	std::cout << matrix << std::endl;
+	std::cout << homMatrix << std::endl;
+
+	sm::Matrix<float> rotMatX(sm::RotationX, 90.0);
+	sm::Matrix<float> rotMatY(sm::RotationY, 90.0);
+	sm::Matrix<float> rotMatZ(sm::RotationZ, 90.0);
+	std::cout << rotMatX << std::endl;
+	std::cout << rotMatY << std::endl;
+	std::cout << rotMatZ << std::endl;
+
+	std::cout << "-------------------------" << std::endl;
+	sm::Matrix<double> rotMat(sm::RotationZ, -30.0f);
+	auto transRotMat = rotMat.Transpose();
+	sm::Vector<double> point({ 1,3 });
+	auto homoPoint = point.Homogeneous();
+	auto newPoint = transRotMat * homoPoint;
+	std::cout << newPoint << std::endl;
+
+	std::cout << "-------------------------" << std::endl;
+	sm::Matrix<double> transMat(sm::Translation2D, 1.0f, 5.0f);
+	std::cout << transMat << std::endl;
+
+	std::cout << "-------------------------" << std::endl;
+	sm::Matrix<double> transfMat(sm::Transformation2D, 180.0f, 0.0f, -2.0f);
+	std::cout << transfMat << std::endl;
+	sm::Vector<double> pt({ 1,1 });
+	std::cout << pt << std::endl;
+	auto newPt = transfMat * pt.Homogeneous();
+	std::cout << newPt << std::endl;
+
+	std::cout << "-------------------------------" << std::endl;
 }
