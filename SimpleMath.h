@@ -6,11 +6,21 @@
 
 #define PI 3.1415926536
 
+#define PRECISION 0.001
+#define TRIGONOMETRIC_PRECISION 11
+#define NEWTON_PRECISION 0.0001
+
 namespace sm {
 	// Function declarations
 	namespace algo {
 		template <typename T>
 		T TaylorSeries(int precision, bool prime, T value);
+		template <typename T>
+		T Absolute(T value);
+		template <typename T>
+		T Power(T value, int exponent);
+		template <typename T>
+		T Sqrt(T value);
 	}
 
 	namespace tg {
@@ -28,7 +38,6 @@ namespace sm {
 		}
 
 		// Trigonometric functions
-		#define TRIGONOMETRIC_PRECISION 11
 		template <typename T>
 		T sin(T angleRad) {
 			return algo::TaylorSeries(TRIGONOMETRIC_PRECISION, false, angleRad);
@@ -150,12 +159,36 @@ namespace sm {
 		}
 
 		Vector<T> Homogeneous() {
+			// Homogenous vector is vector that has one additional row of 1
 			Vector<T> result(m_Size + 1);
 			for (int i = 0; i < m_Size; i++) {
 				result.m_Data[i] = m_Data[i];
 			}
 			result.m_Data[m_Size] = (T)1;
 			return result;
+		}
+		double Length() {
+			// Length or magnitude of vector : Sqrt(x^2 + y^2 + ...)
+			double variable = 0;
+			for (int i = 0; i < m_Size; i++) {
+				double value = m_Data[i];
+				variable += algo::Power(value, 2);
+			}
+			return algo::Sqrt(variable);
+		}
+		bool IsOrthogonal() {
+			// Vector is orthogonal if vector length is 1
+			if (algo::Absolute(Length() - 1.0) < PRECISION)
+				return true;
+			return false;
+		}
+		Vector<T> Normalize() {
+			double length = Length();
+			Vector<T> normalizedVector(m_Size);
+			for (int i = 0; i < m_Size; i++) {
+				normalizedVector.m_Data[i] = m_Data[i] / length;
+			}
+			return normalizedVector;
 		}
 	};
 
@@ -436,6 +469,33 @@ namespace sm {
 			return result;
 		}
 
+		bool IsOrthogonal() {
+			if (m_Rows != m_Cols)
+				return false;
+
+			// Check for horizontal vectors
+			for (int x = 0; x < m_Rows; x++) {
+				Vector<T> vector(m_Cols);
+				for (int y = 0; y < m_Cols; y++) {
+					int i = x * m_Cols + y;
+					vector.m_Data[y] = m_Data[i];
+				}
+				if (!vector.IsOrthogonal())
+					return false;
+			}
+
+			// Check for vertical vectors
+			for (int y = 0; y < m_Cols; y++) {
+				Vector<T> vector(m_Rows);
+				for (int x = 0; x < m_Rows; x++) {
+					int i = x * m_Cols + y;
+					vector.m_Data[x] = m_Data[i];
+				}
+				if (!vector.IsOrthogonal())
+					return false;
+			}
+			return true;
+		}
 		Matrix<T> Homogeneous() {
 			assert(m_Rows == m_Cols);
 
@@ -482,10 +542,10 @@ namespace sm {
 			}
 			return result;
 		}
-		int Determinant() {
+		double Determinant() {
 			assert(m_Rows == m_Cols);
 
-			int determinant = 0;
+			double determinant = 0;
 			if (m_Rows == 2) {
 				determinant = m_Data[0] * m_Data[3] - m_Data[1] * m_Data[2];
 			}
@@ -503,6 +563,9 @@ namespace sm {
 			return determinant;
 		}
 		Matrix<T> Inverse() {
+			if (IsOrthogonal())
+				return Transpose();
+
 			assert(m_Rows == m_Cols);
 			int determiant = this->Determinant();
 			assert(determiant != 0);
@@ -609,6 +672,77 @@ namespace sm {
 				j++;
 			}
 			return result;
+		}
+
+		template <typename T>
+		T NewtonMethod(T value) {
+			assert(value >= 0);
+
+			if (value == 0)
+				return 0;
+			T initialGuess = value / 2.0;
+			T newGuess;
+			while (true) {
+				newGuess = 0.5f * (initialGuess + (value / initialGuess));
+				T delta = newGuess - initialGuess;
+				if (Absolute(delta) < NEWTON_PRECISION)
+					break;
+				initialGuess = newGuess;
+			}
+			return newGuess;
+		}
+
+		template <typename T>
+		T Sqrt(T value) {
+			return NewtonMethod(value);
+		}
+
+		template <typename T>
+		Vector<T> CrossProduct(const Vector<T>& a, const Vector<T>& b) {
+			assert(a.m_Size == 3 && b.m_Size == 3);
+
+			// Make matrix
+			Matrix<T> matrix(3, 3);
+			for (int x = 0; x < matrix.m_Rows; x++) {
+				for (int y = 0; y < matrix.m_Cols; y++) {
+					int i = x * matrix.m_Cols + y;
+					if (x == 0) {
+						if (y % 2 == 0)
+							matrix.m_Data[i] = (T)1;
+						else
+							matrix.m_Data[i] = -(T)1;
+					}
+					else if (x == 1) {
+						matrix.m_Data[i] = a.m_Data[y];
+					}
+					else if (x == 2) {
+						matrix.m_Data[i] = b.m_Data[y];
+					}
+				}
+			}
+			
+			Vector<T> crossProduct(a.m_Size);
+			for (int i = 0; i < crossProduct.m_Size; i++) {
+				Matrix<T> subMatrix = matrix.SubMatrix(0, i);
+				if (i % 2 == 0) {
+					crossProduct.m_Data[i] = subMatrix.Determinant();
+				}
+				else {
+					crossProduct.m_Data[i] = -subMatrix.Determinant();
+				}
+			}
+			return crossProduct;
+		}
+
+		template <typename T>
+		T DotProduct(const Vector<T>& a, const Vector<T>& b) {
+			assert(a.m_Size == b.m_Size);
+
+			T dotProduct = 0;
+			for (int i = 0; i < a.m_Size; i++) {
+				dotProduct += a.m_Data[i] * b.m_Data[i];
+			}
+			return dotProduct;
 		}
 	}
 }

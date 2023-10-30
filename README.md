@@ -64,6 +64,9 @@ auto res6 = vec1 * 2;
 auto res7 = vec1 / 2;
 
 auto homogenousVector = vec4.Homogeneous();
+auto normalizedVector = vec4.Normalize();
+double length = vec4.Length();
+bool orthoVector = vec4.IsOrthogonal();
 
 // Manipulating elements
 vec1[0] = 10;
@@ -90,6 +93,7 @@ int determinant = mat1.Determinant();
 auto transposedMatrix = mat2.Transpose();
 auto subMatrix = mat3.SubMatrix(0, 1); // row and column to ignore
 auto inversedMatrix = mat3.Inverse();
+bool orthoMatrix = mat3.IsOrthogonal();
 
 // Manipulating elements
 mat1[0][2] = 10;
@@ -101,6 +105,10 @@ mat1[0][2] = 10;
 - Absolute
 - Power
 - Taylor series
+- Newton method
+- Sqrt
+- Cross product
+- Dot product
 
 ## Authors
 me :)

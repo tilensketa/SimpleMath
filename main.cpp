@@ -139,4 +139,25 @@ int main() {
 	std::cout << newPt << std::endl;
 
 	std::cout << "-------------------------------" << std::endl;
+
+	for (int i = 0; i < 101; i++) {
+		std::cout << i << ": " << sm::algo::Sqrt((double)i) << std::endl;
+	}
+	sm::Vector<float> newVec({ 0.86602,0.5,0 });
+	std::cout << newVec << std::endl;
+	std::cout << newVec.IsOrthogonal() << std::endl;
+
+	sm::Matrix<double> rtMat(sm::RotationZ, 30.0f);
+	std::cout << rtMat << std::endl;
+	std::cout << rtMat.IsOrthogonal() << std::endl;
+	std::cout << rtMat.Inverse() << std::endl;
+
+	std::cout << "-------------------------------------" << std::endl;
+	sm::Vector<double> vec1({ 3,2,-1 });
+	sm::Vector<double> vec2({ 3,0,5 });
+	std::cout << vec1 << std::endl;
+	std::cout << vec2 << std::endl;
+	std::cout << sm::algo::CrossProduct(vec1, vec2) << std::endl;
+	std::cout << vec1.Normalize() << std::endl;
+	std::cout << sm::algo::DotProduct(vec1, vec2) << std::endl;
 }
