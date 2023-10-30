@@ -1,163 +1,100 @@
 #include "SimpleMath.h"
 
-double ro = 1200.0; // kg / m3
-double cp = 1500.0; // J / kgK
-double k = 0.3; // W / mK
-double L = 0.06; // m
-float Tzac = 80.0 + 273.0; // K
-float Tzrak = 20.0 + 273.0; // K
-int h = 100; // W / m2K
-
-int dt = 1; // s
-const int N = 6; // število vozlišè
-int t = 20000; // konèni èas v s
-double dx = L / 10;
-double diff = k / (ro * cp);
-double Fo = diff * dt / (dx* dx);
-double Bi = h * dx / k;
+#include "HeatTransfer.h"
 
 int main() {
 
-	sm::Vector<double> a(N-1);
-	sm::Vector<double> b(N);
-	sm::Vector<double> c(N-1);
-	sm::Vector<double> z(N);
+	HeatTransfer heat(Example::one);
 
-	sm::Vector<double> T(N, Tzac);
+#pragma region Usage
+	// Create vector with size 3 (elements initialized with 0)
+	sm::Vector myVector(3);
 
-	// define a
-	for (int i = 0; i < a.m_Size; i++) {
-		a[i] = -Fo;
-	}
-	a[a.m_Size - 1] = -2 * Fo;
+	// Change elements
+	myVector[0] = 4;
+	myVector[2] = 1;
 
-	// define c
-	for (int i = 0; i < c.m_Size; i++) {
-		c[i] = -Fo;
-	}
-	c[0] = -2 * Fo;
+	// Print vector
+	std::cout << myVector << std::endl;
 
-	// define b
-	for (int i = 0; i < b.m_Size; i++) {
-		b[i] = 1 + 2 * Fo;
-	}
-	b[b.m_Size - 1] = 1 + 2 * Fo + 2 * Fo * Bi;
+	// Normalize vector and get vector length
+	sm::Vector myNormalizedVector = myVector.Normalize();
+	double myVectorLength = myVector.Length();
 
-	int p = t / dt;
-	sm::Vector<double> temp_zg(p);
-	sm::Vector<double> temp_sp(p);
-	for (int i = 0; i < p; i++) {
-		for (int j = 0; j < N; j++) {
-			z[j] = T[j];
-		}
-		z[z.m_Size - 1] = T[T.m_Size - 1] + 2 * Fo * Bi * Tzrak;
+	// Create matrix 3x3 (elements initialized with initializer list)
+	sm::Matrix myMatrix(3, 3, { 2,5,8,8,7,6,2,4,6 });
 
-		auto Tnew = sm::algo::Thomas(a, b, c, z);
-		T = Tnew;
-		temp_zg[i] = T[T.m_Size - 1] - 273;
-		temp_sp[i] = T[0] - 273;
-	}
-	//std::cout << temp_zg << std::endl;
-	
-#define RESET "\033[0m"
-	int delta = 1;
-	float deltaX = (Tzac - Tzrak) / 40;
-	float deltaY = (float)p / 170;
-	std::cout << "Tzac----------------------------------" << std::endl;
-	for (int x = Tzac-273; x > Tzrak-273; x-=deltaX) {
-		int i = (Tzac - 273 - x) * deltaX;
-		std::cout << temp_zg[i] << "\t";
-		for (int y = 0; y < p; y+=deltaY) {
-			if (temp_zg[y] > x - delta && temp_zg[y] < x + delta)
-				std::cout << "\033[31m"<<"x"<<RESET;
-			else if (temp_sp[y] > x - delta && temp_sp[y] < x + delta)
-				std::cout << "\033[36m"<<"+"<<RESET;
-			else
-				std::cout << " ";
-		}
-		std::cout << std::endl;
-	}
-	std::cout << "Tzrak----------------------------------" << std::endl;
+	// Change elements
+	myMatrix[0][0] = 4;
+	myMatrix[2][1] = 9;
 
-	sm::Matrix<int> mat1(3, 3, { 1,2,3,0,1,4,5,6,0 });
-	auto inv = mat1.Inverse();
+	// Print matrix
+	std::cout << myMatrix << std::endl;
 
-	std::cout << mat1 << std::endl;
-	std::cout << inv << std::endl;
+	// Multiply matrix and vector
+	sm::Vector myResult = myMatrix * myVector;
+#pragma endregion
+#pragma region Trigonometry
+	double angle1Deg = 30.0;
+	double angle2Rad = PI / 3;
 
-	float d = sm::tg::sin(0.523599);
-	std::cout << d << std::endl;
+	// Angle conversion
+	double angle1Rad = sm::tg::degToRad(angle1Deg);
+	double angle2Deg = sm::tg::radToDeg(angle2Rad);
 
-	float rad = PI / 6;
-	float deg = sm::tg::radToDeg(rad);
-	std::cout << deg << std::endl;
+	// Trigonometric functions
+	double sine = sm::tg::sin(angle1Rad);
+	double cosine = sm::tg::cos(angle1Rad);
+	double tangent = sm::tg::tan(angle1Rad);
+	double cotangent = sm::tg::cot(angle1Rad);
+#pragma endregion
+#pragma region Vector
+	// Constructors
+	sm::Vector vector1(3);
+	sm::Vector vector2(3, 5);
+	sm::Vector vector3({1,2,3});
+	sm::Vector copyVector = vector1;
 
-	double value = 2;
-	std::cout << sm::algo::Power(value,2) << std::endl;
-	std::cout << sm::algo::Power(value,-2) << std::endl;
+	// Manipulation
+	vector1[0] = 4;
+	sm::Vector vectorResult1 = vector1 + vector2;
+	sm::Vector vectorResult2 = vector1 - vector2;
+	sm::Vector vectorResult3 = vector2 * 2.0;
+	sm::Vector vectorResult4 = vector2 / 2.0;
 
-	std::cout << sm::tg::sin(rad) << std::endl;
-	std::cout << sm::tg::cos(rad) << std::endl;
-	std::cout << sm::tg::tan(rad) << std::endl;
-	std::cout << sm::tg::cot(rad) << std::endl;
+	// Other
+	sm::Vector homogenousVector = vector3.Homogeneous();
+	double vectorLength = vector3.Length();
+	bool vectorOrthogonal = vector3.IsOrthogonal();
+	sm::Vector normalizedVector = vector3.Normalize();
+	sm::Vector crossProduct = sm::algo::CrossProduct(vector1, vector2);
+	double dotProduct = sm::algo::DotProduct(vector1, vector2);
+#pragma endregion
+#pragma region Matrix
+	// Constructors
+	sm::Matrix matrix1(3, 4);
+	sm::Matrix matrix2(2, 2, 5);
+	sm::Matrix matrix3(2, 2, { 1,2,3,4 });
+	sm::Matrix matrix4(3, 3, { 2,5,8,5,3,5,8,9,7 });
+	sm::Matrix identityMatrix(3);
+	sm::Matrix rotationMatrix(sm::RotationZ, 30.0);
+	sm::Matrix transformationMatrix(sm::Transformation2D, 30.0, 2.0, 3.0);
+	sm::Matrix copyMatrix = matrix3;
 
-	sm::Vector<int> vec({ 1,2,3 });
-	auto hom = vec.Homogeneous();
-	std::cout << vec << std::endl;
-	std::cout << hom << std::endl;
-	
-	sm::Matrix<int> matrix(3,3, { 1,2,3,4,5,6,7,8,9 });
-	auto homMatrix = matrix.Homogeneous();
-	std::cout << matrix << std::endl;
-	std::cout << homMatrix << std::endl;
+	// Manipulation
+	matrix1[0][1] = 2;
+	sm::Matrix matrixResult1 = matrix2 + matrix3;
+	sm::Matrix matrixResult2 = matrix2 - matrix3;
+	sm::Matrix matrixResult3 = matrix2 * matrix3;
+	sm::Vector vec({ 1,2 });
+	sm::Vector vecResult = matrix3 * vec;
 
-	sm::Matrix<float> rotMatX(sm::RotationX, 90.0);
-	sm::Matrix<float> rotMatY(sm::RotationY, 90.0);
-	sm::Matrix<float> rotMatZ(sm::RotationZ, 90.0);
-	std::cout << rotMatX << std::endl;
-	std::cout << rotMatY << std::endl;
-	std::cout << rotMatZ << std::endl;
-
-	std::cout << "-------------------------" << std::endl;
-	sm::Matrix<double> rotMat(sm::RotationZ, -30.0f);
-	auto transRotMat = rotMat.Transpose();
-	sm::Vector<double> point({ 1,3 });
-	auto homoPoint = point.Homogeneous();
-	auto newPoint = transRotMat * homoPoint;
-	std::cout << newPoint << std::endl;
-
-	std::cout << "-------------------------" << std::endl;
-	sm::Matrix<double> transMat(sm::Translation2D, 1.0f, 5.0f);
-	std::cout << transMat << std::endl;
-
-	std::cout << "-------------------------" << std::endl;
-	sm::Matrix<double> transfMat(sm::Transformation2D, 180.0f, 0.0f, -2.0f);
-	std::cout << transfMat << std::endl;
-	sm::Vector<double> pt({ 1,1 });
-	std::cout << pt << std::endl;
-	auto newPt = transfMat * pt.Homogeneous();
-	std::cout << newPt << std::endl;
-
-	std::cout << "-------------------------------" << std::endl;
-
-	for (int i = 0; i < 101; i++) {
-		std::cout << i << ": " << sm::algo::Sqrt((double)i) << std::endl;
-	}
-	sm::Vector<float> newVec({ 0.86602,0.5,0 });
-	std::cout << newVec << std::endl;
-	std::cout << newVec.IsOrthogonal() << std::endl;
-
-	sm::Matrix<double> rtMat(sm::RotationZ, 30.0f);
-	std::cout << rtMat << std::endl;
-	std::cout << rtMat.IsOrthogonal() << std::endl;
-	std::cout << rtMat.Inverse() << std::endl;
-
-	std::cout << "-------------------------------------" << std::endl;
-	sm::Vector<double> vec1({ 3,2,-1 });
-	sm::Vector<double> vec2({ 3,0,5 });
-	std::cout << vec1 << std::endl;
-	std::cout << vec2 << std::endl;
-	std::cout << sm::algo::CrossProduct(vec1, vec2) << std::endl;
-	std::cout << vec1.Normalize() << std::endl;
-	std::cout << sm::algo::DotProduct(vec1, vec2) << std::endl;
+	// Other
+	bool matrixOrthogonal = matrix4.IsOrthogonal();
+	sm::Matrix homogenousMatrix = matrix4.Homogeneous();
+	sm::Matrix subMatrix = matrix4.SubMatrix(0, 0);
+	sm::Matrix transposedMatrix = matrix4.Transpose();
+	double matrixDeterminant = matrix4.Determinant();
+	sm::Matrix inverseMatrix = matrix4.Inverse();
+#pragma endregion
 }

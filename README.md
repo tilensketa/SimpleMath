@@ -7,6 +7,9 @@ A simple, lightweight and header-only math library.
 - [Installation](#installation)
 - [Usage](#usage)
 - [Features](#features)
+      - [Trigonometry](#trigonometry)
+      - [Vector](#vector)
+      - [Matrix](#matrix)
 - [Authors](#authors)
 
 ## Installation
@@ -20,83 +23,97 @@ Example of how to use library:
 ```c++
 #include "SimpleMath.h"
 
-// Creating a vector (type float, size 3)
-sm::Vector<float> vector(3);
+// Create vector with size 3 (elements initialized with 0)
+sm::Vector myVector(3);
 
-// Creating a matrix (type int, 5x3 matrix)
-sm::Matrix<int> matrix(5, 3);
+// Change elements
+myVector[0] = 4;
+myVector[2] = 1;
 
-// Manipulating matrix
-auto result1 = matrix * vector;
-auto result2 = matrix * 3;
-auto result3 = matrix / 5;
-matrix[0][1] = 741;
+// Print vector
+std::cout << myVector << std::endl;
 
-// Manipulating vector
-auto result4 = vector * 3;
-auto result5 = vector / 5;
-vector[2] = 741;
+// Normalize vector and get vector length
+sm::Vector myNormalizedVector = myVector.Normalize();
+double myVectorLength = myVector.Length();
+
+// Create matrix 3x3 (elements initialized with initializer list)
+sm::Matrix myMatrix(3, 3, { 2,5,8,8,7,6,2,4,6 });
+
+// Change elements
+myMatrix[0][0] = 4;
+myMatrix[2][1] = 9;
+
+// Print matrix
+std::cout << myMatrix << std::endl;
+
+// Multiply matrix and vector
+sm::Vector myResult = myMatrix * myVector;
 ```
 
 ## Features
 ### Trigonometry
 ```c++
-float angleDeg = 30.0f;
-float angleRad = sm::tg::degToRad(angleDeg);
-float sine = sm::tg::sin(angleRad);
-float cosine = sm::tg::cos(angleRad);
-float tangent = sm::tg::tan(angleRad);
+double angle1Deg = 30.0;
+double angle2Rad = PI / 3;
+
+// Angle conversion
+double angle1Rad = sm::tg::degToRad(angle1Deg);
+double angle2Deg = sm::tg::radToDeg(angle2Rad);
+
+// Trigonometric functions
+double sine = sm::tg::sin(angle1Rad);
+double cosine = sm::tg::cos(angle1Rad);
+double tangent = sm::tg::tan(angle1Rad);
+double cotangent = sm::tg::cot(angle1Rad);
 ```
 ### Vector
 ```c++
-// Create vector
-sm::Vector<int> vec1(3); // elements are initialized with 0
-sm::Vector<int> vec2(3, 3); // element are initialized with 3 (value)
-sm::Vector<int> vec3({1,2,3}); // elements are initialized with {1,2,3}
-sm::Vector<int> vec4 = {1,2,3}; // elements are initialized with {1,2,3}
+// Constructors
+sm::Vector vector1(3);
+sm::Vector vector2(3, 5);
+sm::Vector vector3({1,2,3});
+sm::Vector copyVector = vector1;
 
-// Manipulating vector with other vector, matrix, scalar
-sm::Matrix<int> matrix(2, 3, 4);
-auto res1 = vec1 + vec2;
-auto res2 = vec1 - vec2;
-auto res5 = matrix * vec1;
-auto res6 = vec1 * 2;
-auto res7 = vec1 / 2;
+// Manipulation
+vector1[0] = 4;
+sm::Vector vectorResult1 = vector1 + vector2;
+sm::Vector vectorResult2 = vector1 - vector2;
+sm::Vector vectorResult3 = vector2 * 2.0;
+sm::Vector vectorResult4 = vector2 / 2.0;
 
-auto homogenousVector = vec4.Homogeneous();
-auto normalizedVector = vec4.Normalize();
-double length = vec4.Length();
-bool orthoVector = vec4.IsOrthogonal();
-
-// Manipulating elements
-vec1[0] = 10;
+// Other
+sm::Vector homogenousVector = vector3.Homogeneous();
+double vectorLength = vector3.Length();
+bool vectorOrthogonal = vector3.IsOrthogonal();
+sm::Vector normalizedVector = vector3.Normalize();
 ```
 ### Matrix
 ```c++
-// Create matrix
-sm::Matrix<int> mat1(3, 3); // 3x3 matrix, elements are initialized with 0
-sm::Matrix<int> mat2(3, 8, 8); // 3x8 matrix, element are initialized with 8 (value)
-sm::Matrix<int> mat3(3, 3, {1,2,3,4,5,6,7,8,9}); // 3x3 matrix, elements are initialized with {1,2,3,4,5,6,7,8,9}
-sm::Matrix<int> mat4(3, sm::Identity) // 3x3 identity matrix (diagonal ones)
-sm::Matrix<int> mat5(sm::RotationZ, 30.0f) // rotationZ matrix (rotate z: 30 deg)
-sm::Matrix<int> mat6(sm::Translation2D, 2.0f, 1.0f) // translation2D matrix (translate x: 2.0f, y: 1.0f)
+sm::Matrix matrix1(3, 4);
+sm::Matrix matrix2(2, 2, 5);
+sm::Matrix matrix3(2, 2, { 1,2,3,4 });
+sm::Matrix matrix4(3, 3, { 2,5,8,5,3,5,8,9,7 });
+sm::Matrix identityMatrix(3);
+sm::Matrix rotationMatrix(sm::RotationZ, 30.0);
+sm::Matrix transformationMatrix(sm::Transformation2D, 30.0, 2.0, 3.0);
+sm::Matrix copyMatrix = matrix3;
 
-// Manipulating matrix with other matrix, scalar
-auto res1 = mat1 + mat4;
-auto res2 = mat1 - mat4;
-auto res3 = mat1 * mat2;
-auto res4 = mat1 * 2;
-auto res5 = mat1 / 2;
+// Manipulation
+matrix1[0][1] = 2;
+sm::Matrix matrixResult1 = matrix2 + matrix3;
+sm::Matrix matrixResult2 = matrix2 - matrix3;
+sm::Matrix matrixResult3 = matrix2 * matrix3;
+sm::Vector vec({ 1,2 });
+sm::Vector vecResult = matrix3 * vec;
 
-auto homogenousMatrix = mat1.Homogenous();
-int determinant = mat1.Determinant();
-auto transposedMatrix = mat2.Transpose();
-auto subMatrix = mat3.SubMatrix(0, 1); // row and column to ignore
-auto inversedMatrix = mat3.Inverse();
-bool orthoMatrix = mat3.IsOrthogonal();
-
-// Manipulating elements
-mat1[0][2] = 10;
+// Other
+bool matrixOrthogonal = matrix4.IsOrthogonal();
+sm::Matrix homogenousMatrix = matrix4.Homogeneous();
+sm::Matrix subMatrix = matrix4.SubMatrix(0, 0);
+sm::Matrix transposedMatrix = matrix4.Transpose();
+double matrixDeterminant = matrix4.Determinant();
+sm::Matrix inverseMatrix = matrix4.Inverse();
 ```
 
 ### Algorithms
