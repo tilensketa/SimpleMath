@@ -3,19 +3,23 @@
 #include <iostream>
 #include <initializer_list>
 #include <cassert>
+#include <limits>
 
 typedef double Number;
+#define MAX_NUMBER std::numeric_limits<Number>::infinity();
+#define MIN_NUMBER -std::numeric_limits<Number>::infinity();
 
 #define PI 3.1415926536
 
-#define PRECISION 0.001
-#define TRIGONOMETRIC_PRECISION 31
+#define PRECISION 0.000001
+#define COS_SIN_TAYLOR_PRECISION 31
 #define NEWTON_PRECISION 0.0001
+#define LOG_TAYLOR_PRECISION 1000
 
 namespace sm {
 	// Function declarations
 	namespace algo {
-		Number TaylorSeries(int precision, bool prime, Number value);
+		Number TaylorCosSin(int precision, bool prime, Number value);
 		Number Absolute(Number value);
 		Number Power(Number value, int exponent);
 		Number Sqrt(Number value);
@@ -38,23 +42,23 @@ namespace sm {
 		// Trigonometric functions
 		Number sin(Number angleRad) {
 			if (angleRad >= 0 && angleRad < PI / 2)
-				return algo::TaylorSeries(TRIGONOMETRIC_PRECISION, false, angleRad);
+				return algo::TaylorCosSin(COS_SIN_TAYLOR_PRECISION, false, angleRad);
 			else if (angleRad >= PI / 2 && angleRad < PI)
-				return algo::TaylorSeries(TRIGONOMETRIC_PRECISION, false, PI - angleRad);
+				return algo::TaylorCosSin(COS_SIN_TAYLOR_PRECISION, false, PI - angleRad);
 			else if (angleRad >= PI && angleRad < 1.5 * PI)
-				return -algo::TaylorSeries(TRIGONOMETRIC_PRECISION, false, angleRad - PI);
+				return -algo::TaylorCosSin(COS_SIN_TAYLOR_PRECISION, false, angleRad - PI);
 			else
-				return -algo::TaylorSeries(TRIGONOMETRIC_PRECISION, false, 2 * PI - angleRad);
+				return -algo::TaylorCosSin(COS_SIN_TAYLOR_PRECISION, false, 2 * PI - angleRad);
 		}
 		Number cos(Number angleRad) {
 			if (angleRad >= 0 && angleRad < PI / 2)
-				return algo::TaylorSeries(TRIGONOMETRIC_PRECISION, true, angleRad);
+				return algo::TaylorCosSin(COS_SIN_TAYLOR_PRECISION, true, angleRad);
 			else if (angleRad >= PI / 2 && angleRad < PI)
-				return -algo::TaylorSeries(TRIGONOMETRIC_PRECISION, true, PI - angleRad);
+				return -algo::TaylorCosSin(COS_SIN_TAYLOR_PRECISION, true, PI - angleRad);
 			else if (angleRad >= PI && angleRad < 1.5 * PI)
-				return -algo::TaylorSeries(TRIGONOMETRIC_PRECISION, true, angleRad - PI);
+				return -algo::TaylorCosSin(COS_SIN_TAYLOR_PRECISION, true, angleRad - PI);
 			else
-				return algo::TaylorSeries(TRIGONOMETRIC_PRECISION, true, 2 * PI - angleRad);
+				return algo::TaylorCosSin(COS_SIN_TAYLOR_PRECISION, true, 2 * PI - angleRad);
 		}
 		Number tan(Number angleRad) {
 			Number result = sin(angleRad) / cos(angleRad);
@@ -139,6 +143,24 @@ namespace sm {
 				result[i] = this->m_Data[i] - other[i];
 			}
 			return result;
+		}
+		bool operator<(const Vector& other) {
+			assert(m_Size == other.m_Size);
+
+			for (int i = 0; i < m_Size; i++) {
+				if (m_Data[i] > other.m_Data[i])
+					return false;
+			}
+			return true;
+		}
+		bool operator>(const Vector& other) {
+			assert(m_Size == other.m_Size);
+
+			for (int i = 0; i < m_Size; i++) {
+				if (m_Data[i] < other.m_Data[i])
+					return false;
+			}
+			return true;
 		}
 
 		friend std::ostream& operator<<(std::ostream& os, const Vector& vec) {
@@ -622,6 +644,14 @@ namespace sm {
 			else
 				return value;
 		}
+		Vector Absolute(Vector vector) {
+			Vector result = vector;
+			for (int i = 0; i < vector.m_Size; i++) {
+				if (result[i] < 0)
+					result[i] = -result[i];
+			}
+			return result;
+		}
 		Number Power(Number value, int exponent) {
 			Number result = 1;
 			for (int i = 1; i <= Absolute(exponent); i++) {
@@ -632,7 +662,7 @@ namespace sm {
 			else
 				return result;
 		}
-		Number TaylorSeries(int precision, bool prime, Number value) {
+		Number TaylorCosSin(int precision, bool prime, Number value) {
 			Number result = (Number)0;
 			int j = 0;
 			for (int i = 0; i <= precision; i++) {
@@ -679,18 +709,17 @@ namespace sm {
 			Matrix matrix(3, 3);
 			for (int x = 0; x < matrix.m_Rows; x++) {
 				for (int y = 0; y < matrix.m_Cols; y++) {
-					int i = x * matrix.m_Cols + y;
 					if (x == 0) {
 						if (y % 2 == 0)
-							matrix.m_Data[i] = (Number)1;
+							matrix[x][y] = (Number)1;
 						else
-							matrix.m_Data[i] = -(Number)1;
+							matrix[x][y] = -(Number)1;
 					}
 					else if (x == 1) {
-						matrix.m_Data[i] = a.m_Data[y];
+						matrix[x][y] = a[y];
 					}
 					else if (x == 2) {
-						matrix.m_Data[i] = b.m_Data[y];
+						matrix[x][y] = b[y];
 					}
 				}
 			}
@@ -699,10 +728,10 @@ namespace sm {
 			for (int i = 0; i < crossProduct.m_Size; i++) {
 				Matrix subMatrix = matrix.SubMatrix(0, i);
 				if (i % 2 == 0) {
-					crossProduct.m_Data[i] = subMatrix.Determinant();
+					crossProduct[i] = subMatrix.Determinant();
 				}
 				else {
-					crossProduct.m_Data[i] = -subMatrix.Determinant();
+					crossProduct[i] = -subMatrix.Determinant();
 				}
 			}
 			return crossProduct;
@@ -712,9 +741,227 @@ namespace sm {
 
 			Number dotProduct = 0;
 			for (int i = 0; i < a.m_Size; i++) {
-				dotProduct += a.m_Data[i] * b.m_Data[i];
+				dotProduct += a[i] * b[i];
 			}
 			return dotProduct;
+		}
+		Number Lerp(const Number& a, const Number& b, const Number& t) {
+			Number result = a + t * (b - a);
+			return result;
+		}
+		Vector Lerp(const Vector& a, const Vector& b, const Number& t) {
+			assert(a.m_Size == b.m_Size);
+
+			Vector result(a.m_Size);
+			for (int i = 0; i < a.m_Size; i++) {
+				result[i] = a[i] + t * (b[i] - a[i]);
+			}
+			return result;
+		}
+		Number InverseLerp(const Number& a, const Number& b, const Number& c) {
+			if (a == b)
+				return 0;
+			return (c - a) / (b - a);
+		}
+		Vector InverseLerp(const Vector& a, const Vector& b, const Vector& c) {
+			Vector result(a.m_Size);
+			for (int i = 0; i < a.m_Size; i++) {
+				result[i] = (c[i] - a[i]) / (b[i] - a[i]);
+			}
+			return result;
+		}
+		Number Max(const Number& a, const Number& b) {
+			if (a > b)
+				return a;
+			else
+				return b;
+		}
+		Number Max(const Vector& a) {
+			Number max = MIN_NUMBER;
+			for (int i = 0; i < a.m_Size; i++) {
+				Number value = a[i];
+				if (value > max) {
+					max = value;
+				}
+			}
+			return max;
+		}
+		Number Min(const Number& a, const Number& b) {
+			if (a < b)
+				return a;
+			else
+				return b;
+		}
+		Number Min(const Vector& a) {
+			Number min = MAX_NUMBER;
+			for (int i = 0; i < a.m_Size; i++) {
+				Number value = a[i];
+				if (value < min) {
+					min = value;
+				}
+			}
+			return min;
+		}
+		int Sign(const Number& value) {
+			if (value >= 0)
+				return 1;
+			else
+				return -1;
+		}
+		Number TaylorLog(Number x, int precision) {
+			assert(x > 0 && precision > 0);
+
+			if (x == 1)
+				return 0;
+			Number result = 0.0;
+			Number term = (x - 1) / (x + 1);
+			Number term_squared = term * term;
+			Number numerator = term;
+			Number denominator = 1;
+
+			for (int i = 1; i <= precision; i++) {
+				result += numerator / denominator;
+				numerator *= term_squared;
+				denominator += 2;
+			}
+			return 2 * result;
+		}
+		Number Log(Number x, Number base) {
+			assert(x > 0 && base > 0 && base != 1);
+
+			Number natural_log_x = TaylorLog(x, LOG_TAYLOR_PRECISION);
+			Number natural_log_base = TaylorLog(base, LOG_TAYLOR_PRECISION);
+
+			return natural_log_x / natural_log_base;
+		}
+		int Floor(const Number& value) {
+			if (value == (int)value)
+				return (int)value;
+			else if (value > 0)
+				return (int)value;
+			else
+				return (int)value - 1;
+		}
+		int Ceil(const Number& value) {
+			if (value == (int)value)
+				return (int)value;
+			else if (value > 0)
+				return (int)value + 1;
+			else
+				return (int)value;
+		}
+		int Round(const Number& value) {
+			int floor = Floor(value);
+			int ceil = Ceil(value);
+			Number deltaUp = Absolute(ceil - value);
+			Number deltaDown = Absolute(floor - value);
+			if (deltaUp > deltaDown)
+				return floor;
+			else
+				return ceil;
+		}
+		Number Clamp(const Number& value, const Number& min, const Number& max) {
+			return Max(min, Min(value, max));
+		}
+		Number Clamp01(const Number& value) {
+			return Max(0, Min(value, 1));
+		}
+		Vector CramersRule(Matrix& coefficientMatrix, const Vector& constants) {
+			assert(coefficientMatrix.m_Rows == coefficientMatrix.m_Cols && coefficientMatrix.m_Cols == constants.m_Size);
+
+			Vector solutions(coefficientMatrix.m_Rows);
+			Number coeffMatDeterminant = coefficientMatrix.Determinant();
+			for (int i = 0; i < coefficientMatrix.m_Cols; i++) {
+				Matrix mat = coefficientMatrix;
+				for (int x = 0; x < mat.m_Rows; x++) {
+					mat[x][i] = constants[x];
+				}
+				Number matDeterminant = mat.Determinant();
+				Number solution = matDeterminant / coeffMatDeterminant;
+				solutions[i] = solution;
+			}
+			return solutions;
+		}
+		Vector GaussJordanElimination(Matrix& coefficientMatrix, const Vector& constants) {
+			assert(coefficientMatrix.m_Rows == coefficientMatrix.m_Cols && coefficientMatrix.m_Cols == constants.m_Size);
+
+			Matrix mat(coefficientMatrix.m_Rows, coefficientMatrix.m_Cols + 1);
+			// Create matrix
+			for (int x = 0; x < mat.m_Rows; x++) {
+				for (int y = 0; y < mat.m_Cols; y++) {
+					if (y == mat.m_Cols - 1)
+						mat[x][y] = constants[x];
+					else
+						mat[x][y] = coefficientMatrix[x][y];
+				}
+			}
+
+			// Solve bottom
+			for (int x = 0; x < mat.m_Rows; x++) {
+				for (int y = 0; y < x+1; y++) {
+					Number value = mat[x][y];
+					if (x == y) {
+						Number divisor = value;
+						// 1 -> divide row
+						for (int yi = 0; yi < mat.m_Cols; yi++) {
+							mat[x][yi] /= divisor;
+						}
+					}
+					else {
+						// 0
+						Number multiplier = value;
+						for (int yi = 0; yi < mat.m_Cols; yi++) {
+							mat[x][yi] -= multiplier * mat[y][yi];
+						}
+					}
+				}
+			}
+			// Solve top
+			for (int y = 1; y < mat.m_Cols-1; y++) {
+				for (int x = 0; x < y; x++) {
+					Number value = mat[x][y];
+					// 0
+					Number multiplier = value;
+					for (int yi = y; yi < mat.m_Cols; yi++) {
+						mat[x][yi] -= multiplier * mat[y][yi];
+					}
+				}
+			}
+			
+			Vector solutions(mat.m_Rows);
+			for (int i = 0; i < mat.m_Rows; i++) {
+				solutions[i] = mat[i][mat.m_Cols - 1];
+			}
+			return solutions;
+		}
+		Vector GaussSeidel(Matrix& coefficientMatrix, const Vector& constants) {
+			assert(coefficientMatrix.m_Rows == coefficientMatrix.m_Cols && coefficientMatrix.m_Cols == constants.m_Size);
+
+			Vector prevGuess(coefficientMatrix.m_Rows);
+			Vector newGuess = prevGuess;
+			int k = 0;
+			while (k < 1000) {
+				for (int x = 0; x < coefficientMatrix.m_Rows; x++) {
+					double guess = 0;
+					double divisor = coefficientMatrix[x][x];
+					for (int y = 0; y < coefficientMatrix.m_Cols; y++) {
+						if (y != x)
+							guess -= Sign(divisor) * coefficientMatrix[x][y] * prevGuess[y];
+					}
+					guess += Sign(divisor) * constants[x];
+
+					guess /= Absolute(divisor);
+					newGuess[x] = guess;
+				}
+				if (Absolute(prevGuess - newGuess) < Vector(3, PRECISION)) {
+					return newGuess;
+				}
+				prevGuess = newGuess;
+				k++;
+			}
+			// Did not converge
+			assert(0);
+			return newGuess;
 		}
 	}
 }
@@ -725,17 +972,8 @@ namespace sm {
 
 void PlotData(const sm::Vector& data1, const sm::Vector& data2) {
 	std::cout << "data size: " << data1.m_Size << std::endl;
-	Number maxValue = 0;
-	Number minValue = 100000;
-	for (int i = 0; i < data1.m_Size; i++) {
-		const Number& value = data1[i];
-		if (value > maxValue) {
-			maxValue = value;
-		}
-		else if (value < minValue) {
-			minValue = value;
-		}
-	}
+	Number maxValue = sm::algo::Max(data1);
+	Number minValue = sm::algo::Min(data2);
 	std::cout << "min: " << minValue << std::endl;
 	std::cout << "max: " << maxValue << std::endl;
 

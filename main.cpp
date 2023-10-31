@@ -97,4 +97,34 @@ int main() {
 	double matrixDeterminant = matrix4.Determinant();
 	sm::Matrix inverseMatrix = matrix4.Inverse();
 #pragma endregion
+
+	sm::Vector val1({ 0,5,3 });
+	sm::Vector val2({ 2,1,2 });
+	for (int i = 0; i < 11; i++) {
+		Number t = i / 10.0;
+		std::cout << t << ": " << sm::algo::Lerp(val1, val2, t) << std::endl;
+	}
+	
+
+	double nu = 0.4;
+	std::cout << "-----------Number: " << nu << std::endl;
+	std::cout << "Floor: " << sm::algo::Floor(nu) << std::endl;
+	std::cout << "Ceil: " << sm::algo::Ceil(nu) << std::endl;
+	std::cout << "Round: " << sm::algo::Round(nu) << std::endl;
+
+	std::cout << sm::algo::Clamp(nu, 0, 5) << std::endl;
+	std::cout << sm::algo::Clamp(nu, -1, 1) << std::endl;
+	std::cout << sm::algo::Clamp01(nu) << std::endl;
+
+	std::cout << "-----------" << std::endl;
+	sm::Matrix coefMat(3, 3, { 3,-1,1,2,6,2,1,2,4 });
+	sm::Vector constants({ 2,5,1 });
+	std::cout << "Cramers Rule: " << sm::algo::CramersRule(coefMat, constants) << std::endl;
+	std::cout << "Gauss Jordan Elimination: " << sm::algo::GaussJordanElimination(coefMat, constants) << std::endl;
+	std::cout << "Gauss Seidel: " << sm::algo::GaussSeidel(coefMat, constants) << std::endl;
+
+	sm::Vector v1({ 1,2,3 });
+	sm::Vector v2({ 0,1,2 });
+	std::cout << (v1 > v2) << std::endl;
+	std::cout << sm::algo::Absolute(v1) << std::endl;
 }

@@ -121,11 +121,24 @@ sm::Matrix inverseMatrix = matrix4.Inverse();
 - Factorial
 - Absolute
 - Power
-- Taylor series
 - Newton method
 - Sqrt
 - Cross product
 - Dot product
+- Lerp
+- Inverse lerp
+- Max
+- Min
+- Sign
+- Log
+- Floor
+- Ceil
+- Round
+- Clamp
+- Clamp01
+- Cramers Rule
+- Gauss Jordan elimination
+- Gauss Seidel
 
 ## Authors
 me :)
